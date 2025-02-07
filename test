@@ -1,0 +1,17 @@
+Hi Tao,
+
+The first issue is resolved, but when I checked the second issue, nothing was found. Do you have any idea why this might be happening?
+
+Also, before checking the second issue, could you please verify the following conditions?
+
+1. Ensure that xmatters_auth_token is correctly stored in the secret manager. (1/29 IA...)
+
+
+2. Confirm that the IAM permissions (roles/secretmanager.secretAccessor) are correctly assigned. (1/24)
+
+
+3. Check whether var.xmatters_webhook_url is publicly accessible.
+
+
+
+Let me know what you find!
