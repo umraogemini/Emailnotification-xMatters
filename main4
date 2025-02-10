@@ -4,6 +4,17 @@ provider "google" {
   zone    = "europe-west2-b"
 }
 
+# Define all regions and zones for redundancy
+variable "regions" {
+  type    = list(string)
+  default = ["europe-west2", "us-central1", "asia-southeast1"] # Add more as needed
+}
+
+variable "zones" {
+  type    = list(string)
+  default = ["europe-west2-b", "us-central1-a", "asia-southeast1-b"] # Add more as needed
+}
+
 # Log-based Metric
 resource "google_logging_metric" "log_based_metrics" {
   name        = "log_based_metrics"
@@ -32,13 +43,9 @@ resource "google_monitoring_notification_channel" "xmatters_webhook" {
   labels = {
     url = var.xmatters_webhook_url # Replace with your xMatters webhook URL
   }
-
-  sensitive_labels {
-    auth_token = data.google_secret_manager_secret_version.xmatters_auth_token.secret_data
-  }
 }
 
-# Alert Policy for Log-Based Metric
+# Alert Policy for Log-Based Metrics and Security Events
 resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
   display_name            = "Log-Based Metric Alert Policy"
   combiner                = "OR"
@@ -47,6 +54,7 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
   }
   incident_autoclose_duration = "604800s" # Auto-close incident after 7 days (7*24*60*60)
 
+  # Condition: Log Severity ERROR or CRITICAL
   conditions {
     display_name = "Condition: Log Metric Severity ERROR"
 
@@ -58,6 +66,47 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
       EOT
       comparison      = "COMPARISON_GT"
       threshold_value = 1 # Trigger alert if count exceeds 1
+      duration        = "60s"
+
+      aggregations {
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_RATE"
+      }
+    }
+  }
+
+  # Condition: High CPU Usage
+  conditions {
+    display_name = "Condition: High CPU Usage"
+
+    condition_threshold {
+      filter     = <<EOT
+        resource.type = "gce_instance" AND
+        metric.type = "compute.googleapis.com/instance/cpu/utilization"
+      EOT
+      comparison      = "COMPARISON_GT"
+      threshold_value = 0.8 # Trigger alert if CPU usage exceeds 80%
+      duration        = "120s"
+
+      aggregations {
+        alignment_period   = "120s"
+        per_series_aligner = "ALIGN_MEAN"
+      }
+    }
+  }
+
+  # Condition: Unauthorized Authentication Attempt
+  conditions {
+    display_name = "Condition: Unauthorized Authentication Attempt"
+
+    condition_threshold {
+      filter     = <<EOT
+        resource.type = "gce_instance" AND
+        logName = "projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Factivity" AND
+        protoPayload.status.code = 7
+      EOT
+      comparison      = "COMPARISON_GT"
+      threshold_value = 1 # Alert if unauthorized access attempts exceed 1
       duration        = "60s"
 
       aggregations {
