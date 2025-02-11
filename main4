@@ -43,10 +43,6 @@ resource "google_monitoring_notification_channel" "xmatters_webhook" {
   labels = {
     url = var.xmatters_webhook_url # Replace with your xMatters webhook URL
   }
-
-  sensitive_labels {
-    auth_token = data.google_secret_manager_secret_version.xmatters_auth_token.secret_data
-  }
 }
 
 # Alert Policy for Log-Based Metrics and Security Events
