@@ -43,18 +43,17 @@ resource "google_monitoring_notification_channel" "xmatters_webhook" {
   labels = {
     url = var.xmatters_webhook_url # Replace with your xMatters webhook URL
   }
+
+  sensitive_labels {
+    auth_token = data.google_secret_manager_secret_version.xmatters_auth_token.secret_data
+  }
 }
 
 # Alert Policy for Log-Based Metrics and Security Events
 resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
-  display_name            = "Log-Based Metric Alert Policy"
-  combiner                = "OR"
-  notification_rate_limit {
-    period = "900s" # One notification per 15 minutes
-  }
-  incident_autoclose_duration = "604800s" # Auto-close incident after 7 days (7*24*60*60)
+  display_name = "Log-Based Metric Alert Policy"
+  combiner     = "OR"
 
-  # Condition: Log Severity ERROR or CRITICAL
   conditions {
     display_name = "Condition: Log Metric Severity ERROR"
 
@@ -75,7 +74,6 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
     }
   }
 
-  # Condition: High CPU Usage
   conditions {
     display_name = "Condition: High CPU Usage"
 
@@ -95,7 +93,6 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
     }
   }
 
-  # Condition: Unauthorized Authentication Attempt
   conditions {
     display_name = "Condition: Unauthorized Authentication Attempt"
 
