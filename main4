@@ -21,7 +21,7 @@ resource "google_logging_metric" "log_based_metrics" {
   description = "Track critical error logs for xMatters"
   
   # Filtering logs with severity ERROR or CRITICAL
-  filter      = 'resource.type="gce_instance" AND severity >= ERROR' 
+  filter = "resource.type=\"gce_instance\" AND severity >= ERROR"
 
   metric_descriptor {
     metric_kind = "DELTA"
