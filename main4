@@ -49,7 +49,7 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
 
     condition_threshold {
       filter     = <<EOT
-        metric.type="logging.googleapis.com/user/${google_logging_metric.log_based_metrics.name}"
+        resource.type="gce_instance" AND metric.type="logging.googleapis.com/user/${google_logging_metric.log_based_metrics.name}"
       EOT
       comparison      = "COMPARISON_GT"
       threshold_value = 1 # Trigger alert if count exceeds 1
@@ -67,7 +67,7 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
 
     condition_threshold {
       filter     = <<EOT
-        metric.type = "compute.googleapis.com/instance/cpu/utilization"
+        resource.type="gce_instance" AND metric.type = "compute.googleapis.com/instance/cpu/utilization"
       EOT
       comparison      = "COMPARISON_GT"
       threshold_value = 0.8 # Trigger alert if CPU usage exceeds 80%
@@ -85,7 +85,7 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
 
     condition_threshold {
       filter     = <<EOT
-        logName = "projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Factivity"
+        resource.type="gce_instance" AND logName = "projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Factivity"
         AND protoPayload.status.code = 7
       EOT
       comparison      = "COMPARISON_GT"
