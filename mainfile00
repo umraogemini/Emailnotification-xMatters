@@ -49,7 +49,7 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
 
     condition_threshold {
       filter = <<EOT
-        metric.type="logging.googleapis.com/user/${google_logging_metric.log_based_metrics.name}"
+        resource.type="k8s_container" AND metric.type="logging.googleapis.com/user/${google_logging_metric.log_based_metrics.name}"
       EOT
       comparison      = "COMPARISON_GT"
       threshold_value = 1
@@ -68,10 +68,10 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
   ]
 }
 
-# IAM Role for Metric Writer
+# IAM Role for Log Writer (Fix for MetricWriter Issue)
 resource "google_project_iam_member" "metric_role" {
   project = var.project_id
-  role    = "roles/logging.metricWriter"
+  role    = "roles/logging.logWriter" # Corrected role
   member  = "serviceAccount:${google_service_account.alert_sa.email}"
 }
 
