@@ -16,16 +16,6 @@ variable "zones" {
   default = ["europe-west2-b", "us-central1-a", "asia-southeast1-b"]
 }
 
-# Define project variable
-variable "project_id" {
-  type = string
-}
-
-# Define xMatters webhook URL variable
-variable "xmatters_webhook_url" {
-  type = string
-}
-
 # Log-based Metric to track critical error logs
 resource "google_logging_metric" "log_based_metrics" {
   name        = "log_based_metrics"
