@@ -1,96 +1,89 @@
-# Terraform Configuration for xMatters Webhook and Email Notification via GCP Log-Based Metrics
-
-# Define provider
+# Provider Configuration
 provider "google" {
   project = var.project_id
-  region  = var.region
+  region  = "europe-west2"
 }
 
 # Variables
 variable "project_id" {}
 variable "region" {}
-variable "log_filter" {
-  default = "resource.type=\"k8s_container\" AND (severity >= \"ERROR\")"
-}
-variable "webhook_url" {}
+variable "xmatters_webhook_url" {}
 variable "email" {
   default = "etfinexpeakdeliveryteamitsupport@noexternalmail"
 }
 
-# Create log-based metric
-resource "google_logging_metric" "log_based_metric" {
-  name        = "k8s-error-log-metric"
-  description = "Metric for monitoring K8s container errors"
-  filter      = var.log_filter
+# Log-based Metric for K8s container errors
+resource "google_logging_metric" "log_based_metrics" {
+  name        = "k8s_error_log_metric"
+  description = "Track critical error logs for Kubernetes containers"
+  
+  filter = <<EOT
+    resource.type="k8s_container" AND severity >= "ERROR"
+  EOT
 
   metric_descriptor {
     metric_kind = "DELTA"
     value_type  = "INT64"
-    unit        = "1"
   }
 }
 
-# Create alerting policy
-resource "google_monitoring_alert_policy" "log_alert_policy" {
-  display_name = "K8s Error Alert Policy"
+# xMatters Webhook Notification Channel (No Basic Auth)
+resource "google_monitoring_notification_channel" "xmatters_webhook" {
+  display_name = "xMatters Webhook"
+  type         = "webhook"
+
+  labels = {
+    url = var.xmatters_webhook_url
+  }
+}
+
+# Email Notification Channel
+resource "google_monitoring_notification_channel" "email" {
+  display_name = "Email Notification"
+  type         = "email"
+
+  labels = {
+    email_address = var.email
+  }
+}
+
+# Alert Policy for Log-Based Metrics
+resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
+  display_name = "K8s Error Log Alert Policy"
+  combiner     = "OR"
 
   conditions {
-    display_name = "K8s Error Log Metric Condition"
+    display_name = "Condition: K8s Error Log Metric"
 
     condition_threshold {
-      filter          = "metric.type=\"logging.googleapis.com/user/k8s-error-log-metric\""
-      duration        = "60s"
+      filter = <<EOT
+        metric.type="logging.googleapis.com/user/${google_logging_metric.log_based_metrics.name}"
+      EOT
       comparison      = "COMPARISON_GT"
-      threshold_value = 10
+      threshold_value = 1
+      duration        = "60s"
 
       aggregations {
-        alignment_period     = "60s"
-        per_series_aligner   = "ALIGN_RATE"
+        alignment_period   = "60s"
+        per_series_aligner = "ALIGN_RATE"
       }
     }
   }
 
   notification_channels = [
-    google_monitoring_notification_channel.webhook.id,
+    google_monitoring_notification_channel.xmatters_webhook.id,
     google_monitoring_notification_channel.email.id
   ]
-
-  combiner = "OR"
-  enabled  = true
 }
 
-# Create webhook notification channel for xMatters
-resource "google_monitoring_notification_channel" "webhook" {
-  display_name = "GCP Alerting and xMatters Notification"
-  type         = "webhook"
-
-  labels = {
-    "url" = var.webhook_url
-  }
-
-  sensitive_labels {
-    auth_token = "your-auth-token"
-  }
-}
-
-# Create email notification channel
-resource "google_monitoring_notification_channel" "email" {
-  display_name = "Email Notification Channel"
-  type         = "email"
-
-  labels = {
-    "email_address" = var.email
-  }
-}
-
-# IAM role for log-based metric
+# IAM Role for Metric Writer
 resource "google_project_iam_member" "metric_role" {
   project = var.project_id
   role    = "roles/logging.metricWriter"
   member  = "serviceAccount:${google_service_account.alert_sa.email}"
 }
 
-# Service account for alerting policy
+# Service Account for Alerting Policy
 resource "google_service_account" "alert_sa" {
   account_id   = "alert-service-account"
   display_name = "Service Account for Alerting Policy"
@@ -98,12 +91,12 @@ resource "google_service_account" "alert_sa" {
 
 # Outputs
 output "metric_name" {
-  value = google_logging_metric.log_based_metric.name
+  value = google_logging_metric.log_based_metrics.name
 }
 
 output "notification_channels" {
   value = [
-    google_monitoring_notification_channel.webhook.name,
+    google_monitoring_notification_channel.xmatters_webhook.name,
     google_monitoring_notification_channel.email.name
   ]
 }
