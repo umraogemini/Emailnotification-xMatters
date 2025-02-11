@@ -15,3 +15,67 @@ Also, before checking the second issue, could you please verify the following co
 
 
 Let me know what you find!
+-----------------------------------------------------
+
+
+Story Points While Setting Up Grafana on GCP
+1️⃣ Provisioning Infrastructure
+
+Setting up Google Kubernetes Engine (GKE) with Terraform
+Choosing the right node size & autoscaling strategy
+Ensuring proper IAM roles for Terraform execution
+2️⃣ Deploying Prometheus for Monitoring
+
+Using Helm charts for easy deployment
+Configuring persistent storage for metrics retention
+Exposing Prometheus outside the cluster securely
+3️⃣ Deploying Grafana for Visualization
+
+Installing Grafana using Helm
+Setting up persistence for dashboards
+Configuring admin credentials securely
+4️⃣ Connecting Grafana to Prometheus
+
+Adding Prometheus as a data source in Grafana
+Verifying metric ingestion & querying with PromQL
+Building custom dashboards for system monitoring
+5️⃣ Securing Grafana Access
+
+Enabling authentication (Google OAuth, LDAP, etc.)
+Restricting external access using Ingress & firewall rules
+Configuring role-based access control (RBAC)
+6️⃣ Alerting & Notifications Setup
+
+Setting up alerts based on Prometheus metrics
+Integrating Slack, email, or PagerDuty for notifications
+Testing alert rules & thresholds
+7️⃣ Optimizing Performance & Scaling
+
+Tuning retention policies for Prometheus
+Using Grafana Loki for centralized logging
+Enabling Grafana dashboards as code for automation
+Challenges Faced During Setup
+⚠️ Cluster Authentication Issues
+
+Incorrect GKE IAM permissions for Terraform
+Fix: Assign roles/container.admin for Terraform execution
+⚠️ Prometheus Storage Limitations
+
+Default ephemeral storage leading to data loss
+Fix: Enable persistent volume (PV) in Helm
+⚠️ Grafana Admin Login Issues
+
+Helm-generated password getting lost
+Fix: Retrieve using
+sh
+Copy
+Edit
+kubectl get secret grafana -o jsonpath="{.data.admin-password}" | base64 --decode
+⚠️ Accessing Grafana from Outside GKE
+
+By default, it runs inside the cluster
+Fix: Use Ingress + Google Cloud Load Balancer
+⚠️ Grafana Not Showing Metrics
+
+Incorrect Prometheus data source configuration
+Fix: Verify Prometheus service URL & enable correct scrape configs
