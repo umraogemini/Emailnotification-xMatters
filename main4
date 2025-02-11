@@ -21,18 +21,12 @@ resource "google_logging_metric" "log_based_metrics" {
   description = "Track critical error logs for xMatters"
   
   # Filtering logs with severity ERROR or CRITICAL
-  filter      = "severity >= ERROR OR severity >= CRITICAL" 
+  filter      = 'resource.type="gce_instance" AND severity >= ERROR' 
 
   metric_descriptor {
     metric_kind = "DELTA"
     value_type  = "INT64"
   }
-}
-
-# Fetch xMatters auth token from Google Secret Manager
-data "google_secret_manager_secret_version" "xmatters_auth_token" {
-  secret  = "xmatters_auth_token"
-  version = "latest"
 }
 
 # xMatters Webhook Notification Channel
@@ -55,9 +49,7 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
 
     condition_threshold {
       filter     = <<EOT
-        resource.type = "gce_instance" AND
-        metric.type = "logging.googleapis.com/user/${google_logging_metric.log_based_metrics.name}" AND
-        severity = "ERROR"
+        metric.type="logging.googleapis.com/user/${google_logging_metric.log_based_metrics.name}"
       EOT
       comparison      = "COMPARISON_GT"
       threshold_value = 1 # Trigger alert if count exceeds 1
@@ -75,7 +67,6 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
 
     condition_threshold {
       filter     = <<EOT
-        resource.type = "gce_instance" AND
         metric.type = "compute.googleapis.com/instance/cpu/utilization"
       EOT
       comparison      = "COMPARISON_GT"
@@ -94,9 +85,8 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
 
     condition_threshold {
       filter     = <<EOT
-        resource.type = "gce_instance" AND
-        logName = "projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Factivity" AND
-        protoPayload.status.code = 7
+        logName = "projects/${var.project_id}/logs/cloudaudit.googleapis.com%2Factivity"
+        AND protoPayload.status.code = 7
       EOT
       comparison      = "COMPARISON_GT"
       threshold_value = 1 # Alert if unauthorized access attempts exceed 1
