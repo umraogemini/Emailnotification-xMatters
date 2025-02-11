@@ -12,13 +12,13 @@ variable "email" {
   default = "etfinexpeakdeliveryteamitsupport@noexternalmail"
 }
 
-# Log-based Metric for K8s container errors
+# Log-based Metric for K8s container errors and critical errors
 resource "google_logging_metric" "log_based_metrics" {
   name        = "k8s_error_log_metric"
-  description = "Track critical error logs for Kubernetes containers"
+  description = "Track critical and error logs for Kubernetes containers"
   
   filter = <<EOT
-    resource.type="k8s_container" AND severity >= "ERROR"
+    resource.type="k8s_container" AND (severity = "ERROR" OR severity = "CRITICAL")
   EOT
 
   metric_descriptor {
@@ -47,13 +47,13 @@ resource "google_monitoring_notification_channel" "email" {
   }
 }
 
-# Alert Policy for Log-Based Metrics
+# Alert Policy for Log-Based Metrics (Including Critical Errors)
 resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
-  display_name = "K8s Error Log Alert Policy"
+  display_name = "K8s Error & Critical Log Alert Policy"
   combiner     = "OR"
 
   conditions {
-    display_name = "Condition: K8s Error Log Metric"
+    display_name = "Condition: K8s Error and Critical Log Metric"
 
     condition_threshold {
       filter = <<EOT
