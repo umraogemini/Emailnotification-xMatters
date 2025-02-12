@@ -79,3 +79,36 @@ Fix: Use Ingress + Google Cloud Load Balancer
 
 Incorrect Prometheus data source configuration
 Fix: Verify Prometheus service URL & enable correct scrape configs
+
+
+
+---------------------------------------------------------------------------------------
+
+
+1. Confirm Service Account Reference
+Ensure that your IAM role assignment correctly references the new service account.
+
+Check this section in main.tf
+hcl
+Copy
+Edit
+resource "google_project_iam_member" "metric_role" {
+  project = var.project_id
+  role    = "roles/logging.logWriter"
+  member  = "serviceAccount:${google_service_account.alert_sa.email}"
+}
+Since alert_sa is defined in:
+
+hcl
+Copy
+Edit
+resource "google_service_account" "alert_sa" {
+  account_id   = "alert-service-account"
+  display_name = "Service Account for Alerting Policy"
+}
+this should work correctly.
+
+2. Ensure main.tf Uses Variables Properly
+Since your modified JSON files (service_account.auto.tfvars.json and service_account_roles.auto.tfvars.json) define service accounts and bindings, you don't need to hardcode values in main.tf.
+
+If you prefer dynamic values, ensure var.project_id is properly referenced.
