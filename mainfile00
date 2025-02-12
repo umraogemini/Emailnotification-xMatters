@@ -8,7 +8,7 @@ provider "google" {
 resource "google_logging_metric" "log_based_metrics" {
   name        = "k8s_error_log_metric"
   description = "Track critical error logs for Kubernetes containers"
-  
+
   filter = <<EOT
     resource.type="k8s_container" AND severity >= "ERROR"
   EOT
@@ -66,13 +66,6 @@ resource "google_monitoring_alert_policy" "log_metric_alert_policy" {
     google_monitoring_notification_channel.xmatters_webhook.id,
     google_monitoring_notification_channel.email.id
   ]
-}
-
-# IAM Role for Log Writer (Fix for MetricWriter Issue)
-resource "google_project_iam_member" "metric_role" {
-  project = var.project_id
-  role    = "roles/logging.logWriter" # Corrected role
-  member  = "serviceAccount:${google_service_account.alert_sa.email}"
 }
 
 # Service Account for Alerting Policy
