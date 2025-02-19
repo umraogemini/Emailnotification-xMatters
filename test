@@ -112,3 +112,10 @@ this should work correctly.
 Since your modified JSON files (service_account.auto.tfvars.json and service_account_roles.auto.tfvars.json) define service accounts and bindings, you don't need to hardcode values in main.tf.
 
 If you prefer dynamic values, ensure var.project_id is properly referenced.
+
+
+
+
+
+gcloud logging write test-log "This is a test error log" --severity=ERROR --log-name=my-test-log
+
