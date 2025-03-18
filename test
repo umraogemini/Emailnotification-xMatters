@@ -119,3 +119,26 @@ If you prefer dynamic values, ensure var.project_id is properly referenced.
 
 gcloud logging write test-log "This is a test error log" --severity=ERROR --log-name=my-test-log
 
+
+
+
+curl.exe -LO "https://dl.k8s.io/release/$(curl -s https://dl.k8s.io/release/stable.txt)/bin/windows/amd64/kubectl.exe"
+
+Move-Item -Path .\kubectl.exe -Destination C:\Windows\System32
+
+
+kubectl version --client
+
+
+choco install kubernetes-cli
+
+
+scoop install kubectl
+
+
+kubectl cluster-info
+kubectl get nodes
+kubectl config use-context <your-cluster-name>
+
+
+
