@@ -145,3 +145,10 @@ Set-ExecutionPolicy AllSigned
 choco -v
 
 
+
+kubectl get events --sort-by=.metadata.creationTimestamp
+kubectl describe deployment -n ecosystem-monitoring prometheus-reverse-proxy
+kubectl get deployment -n ecosystem-monitoring prometheus-reverse-proxy -o yaml
+kubectl get deployment -n ecosystem-monitoring prometheus-reverse-proxy -o yaml > backup.yaml
+
+
