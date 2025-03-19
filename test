@@ -152,3 +152,26 @@ kubectl get deployment -n ecosystem-monitoring prometheus-reverse-proxy -o yaml
 kubectl get deployment -n ecosystem-monitoring prometheus-reverse-proxy -o yaml > backup.yaml
 
 
+
+
+apiVersion: cert-manager.io/v1
+kind: CertificateRequest
+metadata:
+  name: prometheus-reverse-proxy-1
+  annotations:
+    approval.cert-manager.io/approved: "true"  # <-- Auto-approval annotation
+spec:
+  request: {{ .Values.certificateRequestBase64 }}
+  isCA: false
+  usages:
+    - server auth
+    - client auth
+  issuerRef:
+    name: {{ include "prometheus-reverse-proxy.fullname" . }}
+    kind: Issuer
+    group: cert-manager.io
+
+
+{{- end }}
+
+
